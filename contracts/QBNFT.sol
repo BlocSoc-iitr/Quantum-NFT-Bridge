@@ -1,45 +1,55 @@
-// contracts/GameItem.sol
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract GameItem is ERC721URIStorage, Ownable {
-    uint256 private _tokenIds;
-    address private _owner;
+contract QuantumNFT is ERC721 {
+    address public _owner;
+    mapping(uint256 => string) private _tokenURIs;
 
-    constructor() ERC721("Quantum-Bridge-NFT", "QBNFT") {
-        _tokenIds = 0;
+    constructor(address owner_) ERC721("Quantum-Bridge-NFT", "QBNFT") {
+        _owner = owner_;
     }
 
-    event calluserMint(address indexed user, uint256 indexed tokenId);
-
-    function getTokenId() public view onlyOwner returns (uint256) {
-        return _tokenIds;
+    modifier OnlySystem() {
+        require(msg.sender == _owner);
+        _;
     }
+
+    event logUserMint(
+        address indexed user,
+        address indexed owner,
+        string indexed tokenURI_
+    );
+
+    event LogSystemMint(
+        address indexed user,
+        address indexed owner,
+        uint256 indexed tokenId_
+    );
 
     function systemMint(
-        address player,
+        address to_,
         string memory tokenURI,
-        uint256 tokenId
-    ) public onlyOwner returns (uint256) {
-        require(tokenId > _tokenIds, "Choose a greater integer for tokenId");
-        _mint(player, tokenId);
-        _setTokenURI(tokenId, tokenURI);
-        _tokenIds = tokenId + 1;
-        return tokenId;
+        uint256 tokenId_
+    ) public OnlySystem {
+        _mint(to_, tokenId_);
+        _setTokenURI(tokenId_, tokenURI);
+        emit LogSystemMint(msg.sender, to_, tokenId_);
     }
 
-    function userMint(address player, string memory tokenURI)
-        public
-        returns (uint256)
+    function userMint(address to_, string memory tokenURI_) public {
+        emit logUserMint(msg.sender, to_, tokenURI_);
+    }
+
+    function _setTokenURI(uint256 tokenId, string memory _tokenURI)
+        internal
+        virtual
     {
-        _mint(player, _tokenIds);
-        emit calluserMint(player, _tokenIds);
-        _setTokenURI(_tokenIds, tokenURI);
-        _tokenIds++;
-        return _tokenIds - 1;
+        require(
+            _exists(tokenId),
+            "ERC721URIStorage: URI set of nonexistent token"
+        );
+        _tokenURIs[tokenId] = _tokenURI;
     }
 }
