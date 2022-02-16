@@ -14,6 +14,8 @@ contract GameItem is ERC721URIStorage, Ownable {
         _tokenIds = 0;
     }
 
+    event calluserMint(address indexed user, uint256 indexed tokenId);
+
     function getTokenId() public view onlyOwner returns (uint256) {
         return _tokenIds;
     }
@@ -22,7 +24,7 @@ contract GameItem is ERC721URIStorage, Ownable {
         address player,
         string memory tokenURI,
         uint256 tokenId
-    ) public returns (uint256) {
+    ) public onlyOwner returns (uint256) {
         require(tokenId > _tokenIds, "Choose a greater integer for tokenId");
         _mint(player, tokenId);
         _setTokenURI(tokenId, tokenURI);
@@ -35,6 +37,7 @@ contract GameItem is ERC721URIStorage, Ownable {
         returns (uint256)
     {
         _mint(player, _tokenIds);
+        emit calluserMint(player, _tokenIds);
         _setTokenURI(_tokenIds, tokenURI);
         _tokenIds++;
         return _tokenIds - 1;
