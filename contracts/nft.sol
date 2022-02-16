@@ -7,10 +7,11 @@ contract QuantumNFT is ERC721 {
 
     address immutable public _owner;
     mapping(uint256 => string) private _tokenURIs;
-    uint256 public _nftPrice;
+    uint256 immutable public _nftPrice;
 
-    constructor(address owner_) ERC721("Quantum-Bridge-NFT", "QBNFT") {
+    constructor(address owner_, uint256 nftPrice_) ERC721("Quantum-Bridge-NFT", "QBNFT") {
         _owner = owner_;
+        _nftPrice = nftPrice_;
     }
 
     modifier onlySystem() {
