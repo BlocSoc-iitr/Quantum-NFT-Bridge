@@ -10,26 +10,24 @@ interface TokenInterface is IERC721 {
 }
 
 contract Quantum is Ownable, Events {
-
     TokenInterface internal immutable token;
     // Token ID => sender
-    mapping (uint256 => address) internal _tokenIdToSender;
+    mapping(uint256 => address) public _tokenIdToSender;
 
     function lockNft(address sender_, uint256 tokenId_) internal {
         _tokenIdToSender[tokenId_] = sender_;
         emit lockNftLog(sender_, tokenId_);
     }
 
-    function migrate(uint256 tokenId, address to_) external { // user has to call migrate after locking the nft in order to initiate migration
+    function migrate(uint256 tokenId, address to_) external {
+        // user has to call migrate after locking the nft in order to initiate migration
         require(_tokenIdToSender[tokenId] == msg.sender, "illegal-caller");
         emit migrateLog(msg.sender, to_, tokenId);
     }
 
-    function mintNft(
-        address to_,
-        uint256 tokenId_
-    ) external onlyOwner {
-        if (token.ownerOf(tokenId_) != address(0)) { // if token is already minted, means it should be in this contract
+    function mintNft(address to_, uint256 tokenId_) external onlyOwner {
+        if (token.ownerOf(tokenId_) != address(0)) {
+            // if token is already minted, means it should be in this contract
             token.safeTransferFrom(address(this), to_, tokenId_);
         } else {
             token.mint(to_, tokenId_);
@@ -38,11 +36,11 @@ contract Quantum is Ownable, Events {
     }
 
     /**
-    * @dev Triggers when an ERC721 token receives to this contract.
-    * @param _operator Person who initiated the transfer of NFT.
-    * @param _from owner of NFT.
-    * @param _id ID of NFT.
-    */
+     * @dev Triggers when an ERC721 token receives to this contract.
+     * @param _operator Person who initiated the transfer of NFT.
+     * @param _from owner of NFT.
+     * @param _id ID of NFT.
+     */
     function onERC721Received(
         address _operator,
         address _from,
@@ -58,5 +56,4 @@ contract Quantum is Ownable, Events {
         _transferOwnership(owner_);
         token = TokenInterface(tokenAddr_);
     }
-
 }
