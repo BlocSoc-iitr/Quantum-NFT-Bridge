@@ -7,4 +7,6 @@ contract Events {
 
     event migrateLog(address from_, address to_, uint256 tokenId_);
 
+    event mintLog(address to_, uint256 tokenId_);
+
 }

@@ -20,7 +20,7 @@ contract Quantum is Ownable, Events {
         emit lockNftLog(sender_, tokenId_);
     }
 
-    function migrate(uint256 tokenId, address to_) external {
+    function migrate(uint256 tokenId, address to_) external { // user has to call migrate after locking the nft in order to initiate migration
         require(_tokenIdToSender[tokenId] == msg.sender, "illegal-caller");
         emit migrateLog(msg.sender, to_, tokenId);
     }
@@ -29,11 +29,12 @@ contract Quantum is Ownable, Events {
         address to_,
         uint256 tokenId_
     ) external onlyOwner {
-        if (token.ownerOf(tokenId_) == address(this)) {
+        if (token.ownerOf(tokenId_) != address(0)) { // if token is already minted, means it should be in this contract
             token.safeTransferFrom(address(this), to_, tokenId_);
         } else {
             token.mint(to_, tokenId_);
         }
+        emit mintLog(to_, tokenId_);
     }
 
     /**
@@ -49,7 +50,7 @@ contract Quantum is Ownable, Events {
         bytes calldata
     ) external returns (bytes4) {
         require(msg.sender == address(token), "non-quantum-supported-nft");
-        lockNft(_from, _id);
+        lockNft(_from, _id); // sending nft to this contract means locking it.
         return 0x150b7a02;
     }
 
