@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 interface TokenInterface is IERC721 {
-    function mint(address to_, uint256 tokenId_) external;
+    function systemMint(address to_, uint256 tokenId_) external;
 }
 
 contract Quantum is Ownable, Events {
@@ -19,8 +19,8 @@ contract Quantum is Ownable, Events {
         emit lockNftLog(sender_, tokenId_);
     }
 
+    // user has to call migrate after locking the nft in order to initiate migration
     function migrate(uint256 tokenId_, address to_) external {
-        // user has to call migrate after locking the nft in order to initiate migration
         require(_tokenIdToSender[tokenId_] == msg.sender, "illegal-caller");
         emit migrateLog(msg.sender, to_, tokenId_);
     }
@@ -30,7 +30,7 @@ contract Quantum is Ownable, Events {
             // if token is already minted, means it should be in this contract
             token.safeTransferFrom(address(this), to_, tokenId_);
         } else {
-            token.mint(to_, tokenId_);
+            token.systemMint(to_, tokenId_);
         }
         emit mintLog(to_, tokenId_);
     }
