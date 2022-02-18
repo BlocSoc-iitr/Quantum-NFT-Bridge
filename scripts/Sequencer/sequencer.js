@@ -3,7 +3,6 @@ const hre = require("hardhat");
 const { ethers } = hre;
 
 import cron from "node-cron";
-const erc721Abi = require("../constants/erc721.json");
 
 const providerKovan = new ethers.providers.JsonRpcProvider(
   "https://eth-kovan.alchemyapi.io/v2/zHQ9LKzVTUmjFfzQvl4SpgJVdFX8eNAi"
