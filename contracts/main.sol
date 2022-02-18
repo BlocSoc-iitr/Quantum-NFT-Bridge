@@ -1,7 +1,6 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./events.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
@@ -9,10 +8,18 @@ interface TokenInterface is IERC721 {
     function systemMint(address to_, uint256 tokenId_) external;
 }
 
-contract Quantum is Ownable, Events {
+contract Quantum is Ownable {
     TokenInterface internal immutable token;
     // Token ID => sender
     mapping(uint256 => address) public _tokenIdToSender;
+
+    event lockNftLog(address indexed owner_, uint256 indexed tokenId_);
+    event migrateLog(
+        address indexed from_,
+        address indexed to_,
+        uint256 indexed tokenId_
+    );
+    event mintLog(address indexed to_, uint256 indexed tokenId_);
 
     function lockNft(address sender_, uint256 tokenId_) internal {
         _tokenIdToSender[tokenId_] = sender_;
