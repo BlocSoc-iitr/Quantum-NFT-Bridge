@@ -36,6 +36,7 @@ contract Quantum is Ownable {
         if (token.ownerOf(tokenId_) != address(0)) {
             // if token is already minted, means it should be in this contract
             token.safeTransferFrom(address(this), to_, tokenId_);
+            delete _tokenIdToSender[tokenId_];
         } else {
             token.systemMint(to_, tokenId_);
         }
