@@ -19,10 +19,10 @@ contract Quantum is Ownable, Events {
         emit lockNftLog(sender_, tokenId_);
     }
 
-    function migrate(uint256 tokenId, address to_) external {
+    function migrate(uint256 tokenId_, address to_) external {
         // user has to call migrate after locking the nft in order to initiate migration
-        require(_tokenIdToSender[tokenId] == msg.sender, "illegal-caller");
-        emit migrateLog(msg.sender, to_, tokenId);
+        require(_tokenIdToSender[tokenId_] == msg.sender, "illegal-caller");
+        emit migrateLog(msg.sender, to_, tokenId_);
     }
 
     function mintNft(address to_, uint256 tokenId_) external onlyOwner {
