@@ -3,7 +3,6 @@ const hre = require("hardhat");
 const { ethers } = hre;
 
 import cron from "node-cron";
-const erc721Abi = require("../constants/erc721.json");
 
 const providerKovan = new ethers.providers.JsonRpcProvider(
   "https://eth-kovan.alchemyapi.io/v2/zHQ9LKzVTUmjFfzQvl4SpgJVdFX8eNAi"
@@ -24,45 +23,65 @@ const accountY = new ethers.Wallet(`0x${process.env.PRIVATE_KEY}`).connect(
 let nonce = 0;
 const idOwnerMap = new Map();
 
-const contractAddress = "";
-const contractABI = [];
-const contractInstanceChainX = new ethers.Contract(
-  contractAddress,
-  contractABI,
+const bridgeAddressX = "";
+const bridgeAddressY = "";
+const nftManagerX = "";
+const nftManagerY = "";
+const bridgeABI = [];
+const nftABI = [];
+
+const bridgeInstanceChainX = new ethers.Contract(
+  bridgeAddressX,
+  bridgeABI,
   providerKovan
 );
 
-const contractInstanceChainY = new ethers.Contract(
-  contractAddress,
-  contractABI,
+const bridgeInstanceChainY = new ethers.Contract(
+  bridgeAddressY,
+  bridgeABI,
   providerFuji
 );
 
-// deploying for testing
-// {
-//   const [signer, owner] = ethers.getSigners();
-//   const Connector = await ethers.getContractFactory("Quantum");
-//   const contractInstanceChainX = await Connector.deploy(owner.address, owner.address);
-//   await contractInstanceChainX.deployed();
-// }
+const nftInstanceChainX = new ethers.Contract(
+  nftManagerX,
+  nftABI,
+  providerKovan
+);
+
+const nftInstanceChainY = new ethers.Contract(
+  nftManagerY,
+  nftABI,
+  providerFuji
+);
+
+let filter1 = bridgeInstanceChainX.filter.lockNftLog();
+let filter2 = bridgeInstanceChainX.filter.migrateLog();
+let filter3 = bridgeInstanceChainX.filter.migrateLog();
 
 cron.schedule(`* * * * *`, async () => {
-  let filter = contractInstanceChainX.filter.lockNftLog();
-
-  contractInstanceChainX.on(filter, (_from, _id, _nftAddr) => {
+  bridgeInstanceChainX.on(filter1, (_from, _id, _nftAddr) => {
     idOwnerMap.set(_id, _from);
   });
 
-  filter = contractInstanceChainX.filter.migrateLog();
-
-  contractInstanceChainX.on(filter, (_from, _to, _tokenId) => {
-    expect(
-      await contractInstanceChainX._tokenIdToSender(_tokenId)
-    ).to.be.not.eq(ethers.constants.AddressZero);
-    expect(await contractInstanceChainX._tokenIdToSender(_tokenId)).to.be.eq(
+  bridgeInstanceChainX.on(filter2, (_from, _to, _tokenId) => {
+    expect(await bridgeInstanceChainX._tokenIdToSender(_tokenId)).to.be.not.eq(
+      ethers.constants.AddressZero
+    );
+    expect(await bridgeInstanceChainX._tokenIdToSender(_tokenId)).to.be.eq(
       idOwnerMap.get(_tokenId)
     );
     // mint NFT on the target chain here: avax fuji
-    await contractInstanceChainY.connect(accountY).systemMint();
+    await bridgeInstanceChainY.connect(accountY).systemMint(_tokenId, _to);
+  });
+
+  bridgeInstanceChainX.on(filter3, (_from, _to, _tokenId) => {
+    expect(await bridgeInstanceChainX._tokenIdToSender(_tokenId)).to.be.not.eq(
+      ethers.constants.AddressZero
+    );
+    expect(await bridgeInstanceChainX._tokenIdToSender(_tokenId)).to.be.eq(
+      idOwnerMap.get(_tokenId)
+    );
+    // mint NFT on the target chain here: avax fuji
+    await bridgeInstanceChainY.connect(accountY).systemMint(_tokenId, _to);
   });
 });
