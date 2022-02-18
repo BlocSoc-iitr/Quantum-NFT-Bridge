@@ -20,8 +20,12 @@ contract Quantum is Ownable {
         address indexed to_,
         uint256 indexed tokenId_
     );
-    
+
     event mintLog(address indexed to_, uint256 indexed tokenId_);
+
+    constructor(address tokenAddr_) Ownable() {
+        token = TokenInterface(tokenAddr_);
+    }
 
     function lockNft(address sender_, uint256 tokenId_) internal {
         _tokenIdToSender[tokenId_] = sender_;
@@ -60,10 +64,5 @@ contract Quantum is Ownable {
         require(msg.sender == address(token), "non-quantum-supported-nft");
         lockNft(_from, _id); // sending nft to this contract means locking it.
         return 0x150b7a02;
-    }
-
-    constructor(address owner_, address tokenAddr_) Ownable() {
-        _transferOwnership(owner_);
-        token = TokenInterface(tokenAddr_);
     }
 }
