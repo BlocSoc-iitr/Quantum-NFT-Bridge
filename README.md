@@ -5,6 +5,11 @@
    - Avalanche (Fuji) -> Ethereum (Kovan)
    - Ethereum (Kovan) -> Avalanche (Fuji)
 
+To run the server:
+```js
+node  --experimental-json-modules scripts/Sequencer/sequencer.js
+```
+
 ### How does Quantum works
 - User submits their NFT to our Quantum Bridge using the `transferFrom` function.
 - When NFT has been received, our Quantum Bridge locks the NFT.
