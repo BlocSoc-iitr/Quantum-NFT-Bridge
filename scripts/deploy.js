@@ -17,6 +17,10 @@ async function main () {
 
     console.log('Quantum deployed: ', quantum.address)
 
+    await nft.setBridgeAddr(quantum.address)
+
+    console.log("Set bridge address")
+
     await hre.run('verify:verify', {
         address: nft.address,
         constructorArguments: [nftPrice],
