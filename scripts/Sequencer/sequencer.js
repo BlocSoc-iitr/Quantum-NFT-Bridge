@@ -22,7 +22,7 @@ const accountY = new ethers.Wallet(`0x${process.env.PRIVATE_KEY}`).connect(
   providerFuji
 );
 
-let nonce = 0;
+let tokenId = 5;
 const idOwnerMap = new Map();
 
 const bridgeAddressX = "0xcdDd334A5F4E84604b36691859bE7ff7ADF770b7";
@@ -68,70 +68,90 @@ let filter9 = nftInstanceChainY.filters.UserMintLog();
 let filter10 = nftInstanceChainY.filters.SystemMintLog();
 
 cron.schedule(`* * * * * *`, async () => {
-  console.log("Sequencer up and running");
-  bridgeInstanceChainX.on(filter1, (_from, _id) => {
-    console.log("lockNftLog emitted on Kovan ");
-    idOwnerMap.set(parseInt(_id._hex), _from);
-  });
+  try {
+    console.log("Sequencer up and running");
+    bridgeInstanceChainX.on(filter1, (_from, _id) => {
+      console.log("lockNftLog emitted on Kovan ");
+      idOwnerMap.set(parseInt(_id._hex), _from);
+    });
 
-  bridgeInstanceChainX.on(filter2, async (_from, _to, _tokenId) => {
-    console.log("migrateLog emitted on Kovan");
+    bridgeInstanceChainX.on(filter2, async (_from, _to, _tokenId) => {
+      console.log("migrateLog emitted on Kovan");
 
-    expect(await bridgeInstanceChainX._tokenIdToSender(_tokenId)).to.be.not.eq(
-      ethers.constants.AddressZero
-    );
-    // expect(await bridgeInstanceChainX._tokenIdToSender(_tokenId)).to.be.eq(
-    //   idOwnerMap.get(_tokenId)
-    // );
-    // mint NFT on the target chain here: avax fuji
-    await bridgeInstanceChainX
-      .connect(accountY)
-      .mintNft(_to, parseInt(_tokenId._hex));
-  });
+      expect(
+        await bridgeInstanceChainX._tokenIdToSender(_tokenId)
+      ).to.be.not.eq(ethers.constants.AddressZero);
+      // expect(await bridgeInstanceChainX._tokenIdToSender(_tokenId)).to.be.eq(
+      //   idOwnerMap.get(_tokenId)
+      // );
+      // mint NFT on the target chain here: avax fuji
+      await bridgeInstanceChainY
+        .connect(accountY)
+        .mintNft(_to, parseInt(_tokenId._hex));
+    });
 
-  bridgeInstanceChainX.on(filter3, async (_to, _tokenId) => {
-    console.log("mintLog emitted for migration on Kovan");
-  });
+    bridgeInstanceChainX.on(filter3, async (_to, _tokenId) => {
+      console.log("mintLog emitted for migration on Kovan");
+    });
 
-  nftInstanceChainX.on(filter4, async () => {
-    console.log("User submitted request for new NFT on Kovan");
-  });
+    nftInstanceChainX.on(filter4, async (from_, to_) => {
+      console.log("User submitted request for new NFT on Kovan");
+      try {
+        await nftInstanceChainX.connect(accountX).systemMint(to_, tokenId);
+        tokenId += 1;
+      } catch (error) {
+        console.log("NFT minted");
+      }
+    });
 
-  nftInstanceChainX.on(filter5, async () => {
-    console.log("User NFT minted on Kovan by System");
-  });
+    nftInstanceChainX.on(filter5, async () => {
+      console.log("User NFT minted on Kovan by System");
+    });
+  } catch (error) {
+    console.log("success");
+  }
 });
 
 cron.schedule(`* * * * * *`, async () => {
-  bridgeInstanceChainY.on(filter6, (_from, _id) => {
-    console.log("lockNftLog emitted on Fuji");
-    idOwnerMap.set(parseInt(_id._hex), _from);
-  });
+  try {
+    bridgeInstanceChainY.on(filter6, (_from, _id) => {
+      console.log("lockNftLog emitted on Fuji");
+      idOwnerMap.set(parseInt(_id._hex), _from);
+    });
 
-  bridgeInstanceChainY.on(filter7, async (_from, _to, _tokenId) => {
-    console.log("migrateLog emitted on Fuji");
+    bridgeInstanceChainY.on(filter7, async (_from, _to, _tokenId) => {
+      console.log("migrateLog emitted on Fuji");
 
-    expect(await bridgeInstanceChainY._tokenIdToSender(_tokenId)).to.be.not.eq(
-      ethers.constants.AddressZero
-    );
-    // expect(await bridgeInstanceChainY._tokenIdToSender(_tokenId)).to.be.eq(
-    //   idOwnerMap.get(_tokenId)
-    // );
-    // mint NFT on the target chain here: avax fuji
-    await bridgeInstanceChainY
-      .connect(accountY)
-      .mintNft(_to, parseInt(_tokenId._hex));
-  });
+      expect(
+        await bridgeInstanceChainY._tokenIdToSender(_tokenId)
+      ).to.be.not.eq(ethers.constants.AddressZero);
+      // expect(await bridgeInstanceChainY._tokenIdToSender(_tokenId)).to.be.eq(
+      //   idOwnerMap.get(_tokenId)
+      // );
+      // mint NFT on the target chain here: avax fuji
+      await bridgeInstanceChainX
+        .connect(accountX)
+        .mintNft(_to, parseInt(_tokenId._hex));
+    });
 
-  bridgeInstanceChainY.on(filter8, async (_to, _tokenId) => {
-    console.log("mintLog emitted for migration on Fuji");
-  });
+    bridgeInstanceChainY.on(filter8, async (_to, _tokenId) => {
+      console.log("mintLog emitted for migration on Fuji");
+    });
 
-  nftInstanceChainY.on(filter9, async () => {
-    console.log("User submitted request for new NFT on Fuji");
-  });
+    nftInstanceChainY.on(filter9, async (from_, to_) => {
+      console.log("User submitted request for new NFT on Fuji");
+      try {
+        await nftInstanceChainY.connect(accountY).systemMint(to_, tokenId);
+        tokenId += 1;
+      } catch (error) {
+        console.log("NFT minted");
+      }
+    });
 
-  nftInstanceChainY.on(filter10, async () => {
-    console.log("User NFT minted on Fuji by System");
-  });
+    nftInstanceChainY.on(filter10, async () => {
+      console.log("User NFT minted on Fuji by System");
+    });
+  } catch (error) {
+    console.log("success");
+  }
 });
